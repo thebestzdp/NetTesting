@@ -12,6 +12,9 @@
 		1F35329C278EF38C00DAE6AD /* NetPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F35329B278EF38C00DAE6AD /* NetPing.c */; };
 		1F35329E278EF5C700DAE6AD /* NetTrace.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F35329D278EF5C700DAE6AD /* NetTrace.c */; };
 		1F3532A0278EF95600DAE6AD /* CurlConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F35329F278EF95600DAE6AD /* CurlConnection.cpp */; };
+		1F8EBB5E279546FF00FFAEC8 /* krypton.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F8EBB5D279546FF00FFAEC8 /* krypton.c */; };
+		1F8EBB612795473000FFAEC8 /* http_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F8EBB602795473000FFAEC8 /* http_parser.c */; };
+		1F8EBB642795477200FFAEC8 /* http.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F8EBB632795477200FFAEC8 /* http.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +37,12 @@
 		1F35329B278EF38C00DAE6AD /* NetPing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetPing.c; sourceTree = "<group>"; };
 		1F35329D278EF5C700DAE6AD /* NetTrace.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = NetTrace.c; sourceTree = "<group>"; };
 		1F35329F278EF95600DAE6AD /* CurlConnection.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CurlConnection.cpp; sourceTree = "<group>"; };
+		1F8EBB5C279546FF00FFAEC8 /* krypton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = krypton.h; sourceTree = "<group>"; };
+		1F8EBB5D279546FF00FFAEC8 /* krypton.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = krypton.c; sourceTree = "<group>"; };
+		1F8EBB5F2795473000FFAEC8 /* http_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = http_parser.h; sourceTree = "<group>"; };
+		1F8EBB602795473000FFAEC8 /* http_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http_parser.c; sourceTree = "<group>"; };
+		1F8EBB622795477200FFAEC8 /* http.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = http.h; sourceTree = "<group>"; };
+		1F8EBB632795477200FFAEC8 /* http.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +77,7 @@
 		1F353288278EF18C00DAE6AD /* NetTesting */ = {
 			isa = PBXGroup;
 			children = (
+				1F8EBB5B279546EB00FFAEC8 /* chttp */,
 				1F353289278EF18C00DAE6AD /* main.cpp */,
 				1F35329A278EF36800DAE6AD /* NetTesting.h */,
 				1F35329B278EF38C00DAE6AD /* NetPing.c */,
@@ -83,6 +93,19 @@
 				1F353291278EF19B00DAE6AD /* libcurl.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1F8EBB5B279546EB00FFAEC8 /* chttp */ = {
+			isa = PBXGroup;
+			children = (
+				1F8EBB5C279546FF00FFAEC8 /* krypton.h */,
+				1F8EBB5D279546FF00FFAEC8 /* krypton.c */,
+				1F8EBB5F2795473000FFAEC8 /* http_parser.h */,
+				1F8EBB602795473000FFAEC8 /* http_parser.c */,
+				1F8EBB622795477200FFAEC8 /* http.h */,
+				1F8EBB632795477200FFAEC8 /* http.c */,
+			);
+			path = chttp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -144,7 +167,10 @@
 			files = (
 				1F35328A278EF18C00DAE6AD /* main.cpp in Sources */,
 				1F3532A0278EF95600DAE6AD /* CurlConnection.cpp in Sources */,
+				1F8EBB5E279546FF00FFAEC8 /* krypton.c in Sources */,
 				1F35329E278EF5C700DAE6AD /* NetTrace.c in Sources */,
+				1F8EBB642795477200FFAEC8 /* http.c in Sources */,
+				1F8EBB612795473000FFAEC8 /* http_parser.c in Sources */,
 				1F35329C278EF38C00DAE6AD /* NetPing.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
