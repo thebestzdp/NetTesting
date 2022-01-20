@@ -15,66 +15,38 @@
 
 typedef struct x509_store_ctx_st X509_STORE_CTX;
 typedef struct ssl_st SSL;
-typedef struct ssl_ctx_st SSL_CTX;
-typedef struct ssl_method_st SSL_METHOD;
+typedef struct ssl_ctx_st CSSL_CTX;
+typedef struct ssl_method_st CSSL_METHOD;
 
-int SSL_library_init(void);
-SSL *SSL_new(SSL_CTX *ctx);
-int SSL_set_fd(SSL *ssl, int fd);
-int SSL_set_cipher_list(SSL *ssl, const char *str);
-int SSL_get_fd(SSL *ssl);
-int SSL_accept(SSL *ssl);
-int SSL_connect(SSL *ssl);
-int SSL_read(SSL *ssl, void *buf, int num);
-int SSL_write(SSL *ssl, const void *buf, int num);
-int SSL_shutdown(SSL *ssl);
-void SSL_free(SSL *ssl);
+int CSSL_library_init(void);
+SSL *CSSL_new(CSSL_CTX *ctx);
+int CSSL_set_fd(SSL *ssl, int fd);
+int CSSL_accept(SSL *ssl);
+int CSSL_connect(SSL *ssl);
+int CSSL_read(SSL *ssl, void *buf, int num);
+int CSSL_write(SSL *ssl, const void *buf, int num);
+int CSSL_shutdown(SSL *ssl);
+void CSSL_free(SSL *ssl);
 
-#define SSL_ERROR_NONE 0
-#define SSL_ERROR_SSL 1
-#define SSL_ERROR_WANT_READ 2
-#define SSL_ERROR_WANT_WRITE 3
-#define SSL_ERROR_SYSCALL 5
-#define SSL_ERROR_ZERO_RETURN 6
-#define SSL_ERROR_WANT_CONNECT 7
-#define SSL_ERROR_WANT_ACCEPT 8
-int SSL_get_error(const SSL *ssl, int ret);
+#define CSSL_ERROR_NONE 0
+#define CSSL_ERROR_SSL 1
+#define CSSL_ERROR_WANT_READ 2
+#define CSSL_ERROR_WANT_WRITE 3
+#define CSSL_ERROR_SYSCALL 5
+#define CSSL_ERROR_ZERO_RETURN 6
+#define CSSL_ERROR_WANT_CONNECT 7
+#define CSSL_ERROR_WANT_ACCEPT 8
+int CSSL_get_error(const SSL *ssl, int ret);
 
-const SSL_METHOD *TLSv1_2_method(void);
-const SSL_METHOD *TLSv1_2_server_method(void);
-const SSL_METHOD *TLSv1_2_client_method(void);
-const SSL_METHOD *SSLv23_method(void);
-const SSL_METHOD *SSLv23_server_method(void);
-const SSL_METHOD *SSLv23_client_method(void);
+const CSSL_METHOD *CSSLv23_client_method(void);
 
-SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth);
+CSSL_CTX *CSSL_CTX_new(const CSSL_METHOD *meth);
 
-#define SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER 0x00000002L
-#define SSL_CTX_set_mode(ctx, op) SSL_CTX_ctrl((ctx), 33, (op), NULL)
-long SSL_CTX_ctrl(SSL_CTX *, int, long, void *);
+#define CSSL_MODE_ACCEPT_MOVING_WRITE_BUFFER 0x00000002L
+#define CSSL_CTX_set_mode(ctx, op) CSSL_CTX_ctrl((ctx), 33, (op), NULL)
+long CSSL_CTX_ctrl(CSSL_CTX *, int, long, void *);
 
-int SSL_CTX_set_cipher_list(SSL_CTX *ctx, const char *str);
-
-/* for the client */
-#define SSL_VERIFY_NONE 0x00
-#define SSL_VERIFY_PEER 0x01
-#define SSL_VERIFY_FAIL_IF_NO_PEER_CERT 0x02
-#define SSL_VERIFY_CLIENT_ONCE 0x04
-void SSL_CTX_set_verify(SSL_CTX *ctx, int mode,
-                        int (*verify_callback)(int, X509_STORE_CTX *));
-int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
-                                  const char *CAPath);
-
-/* Krypton-specific. */
-int SSL_CTX_kr_set_verify_name(SSL_CTX *ctx, const char *name);
-
-/* for the server */
-#define SSL_FILETYPE_PEM 1
-int SSL_CTX_use_certificate_chain_file(SSL_CTX *ctx, const char *file);
-int SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type);
-int SSL_CTX_use_PrivateKey_file(SSL_CTX *ctx, const char *file, int type);
-
-void SSL_CTX_free(SSL_CTX *);
+void CSSL_CTX_free(CSSL_CTX *);
 
 typedef struct {
   unsigned char block_len;
@@ -289,10 +261,6 @@ struct ssl_st {
 NS_INTERNAL void ssl_err(struct ssl_st *ssl, int err);
 NS_INTERNAL void kr_set_state(struct ssl_st *ssl, enum kr_state new_state);
 
-#if KRYPTON_DEBUG
-void hex_dumpf(FILE *f, const void *buf, size_t len, size_t llen);
-void hex_dump(const void *ptr, size_t len, size_t llen);
-#endif
 
 typedef struct _bigint bigint; /**< An alias for _bigint */
 
@@ -435,7 +403,7 @@ enum TLS_SignatureAlgorithm {
 #define TLS_1_2_PROTO 0x0303
 #define TLS_1_1_PROTO 0x0302
 #define TLS_1_0_PROTO 0x0301
-#define SSL_3_0_PROTO 0x0300
+#define CSSL_3_0_PROTO 0x0300
 
 #define TLS_CHANGE_CIPHER_SPEC 20
 #define TLS_ALERT 21
@@ -619,8 +587,8 @@ NS_INTERNAL int RSA_encrypt(const RSA_CTX *ctx, const uint8_t *in_data,
                             uint16_t in_len, uint8_t *out_data, int is_signing);
 NS_INTERNAL bigint *RSA_public(const RSA_CTX *c, bigint *bi_msg);
 NS_INTERNAL int RSA_block_size(RSA_CTX *ctx);
-#if defined(CONFIG_SSL_CERT_VERIFICATION) || \
-    defined(CONFIG_SSL_GENERATE_X509_CERT)
+#if defined(CONFIG_CSSL_CERT_VERIFICATION) || \
+    defined(CONFIG_CSSL_GENERATE_X509_CERT)
 NS_INTERNAL bigint *RSA_sign_verify(BI_CTX *ctx, const uint8_t *sig,
                                     int sig_len, bigint *modulus,
                                     bigint *pub_exp);
@@ -862,7 +830,7 @@ NS_INTERNAL int bi_compare(bigint *bia, bigint *bib);
 NS_INTERNAL void bi_set_mod(BI_CTX *ctx, bigint *bim, int mod_offset);
 NS_INTERNAL void bi_free_mod(BI_CTX *ctx, int mod_offset);
 
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
 NS_INTERNAL void bi_print(const char *label, bigint *bi);
 NS_INTERNAL bigint *bi_str_import(BI_CTX *ctx, const char *data);
 #endif
@@ -1005,17 +973,6 @@ struct gber_tag {
 NS_INTERNAL const uint8_t *ber_decode_tag(struct gber_tag *tag,
                                           const uint8_t *ptr, size_t len);
 NS_INTERNAL unsigned int ber_id_octet_constructed(uint8_t id);
-#if 0
-NS_INTERNAL const uint8_t *ber_tag_info(struct gber_tag *tag,
-                const uint8_t *ptr, size_t len);
-NS_INTERNAL unsigned int ber_id_octet_class(uint8_t id);
-#endif
-
-#if KRYPTON_DEBUG
-NS_INTERNAL const char *ber_id_octet_clsname(uint8_t id);
-int ber_dump(const uint8_t *ptr, size_t len);
-int ber_dumpf(FILE *f, const uint8_t *ptr, size_t len);
-#endif
 
 #endif /* CS_KRYPTON_SRC_BER_H_ */
 #ifdef KR_MODULE_LINES
@@ -1103,7 +1060,7 @@ struct X509_st {
 
 NS_INTERNAL X509 *X509_new(const uint8_t *ptr, size_t len);
 /* chain should be backwards with subject at the end */
-NS_INTERNAL int X509_verify(SSL_CTX *ctx, X509 *chain);
+NS_INTERNAL int X509_verify(CSSL_CTX *ctx, X509 *chain);
 NS_INTERNAL void X509_free(X509 *cert);
 
 NS_INTERNAL int x509_issued_by(struct vec *issuer, struct vec *subject);
@@ -1260,90 +1217,6 @@ int main(int argc, char **argv) {
 
 /* Amalgamated: #include "ktypes.h" */
 
-#if KRYPTON_DEBUG
-static void hex_dumpf_r(FILE *f, const uint8_t *tmp, size_t len, size_t llen,
-                        unsigned int depth) {
-  size_t i, j;
-  size_t line;
-
-  for (j = 0; j < len; j += line, tmp += line) {
-    if (j + llen > len) {
-      line = len - j;
-    } else {
-      line = llen;
-    }
-
-    fprintf(f, "%*c%05zx : ", depth, ' ', j);
-
-    for (i = 0; i < line; i++) {
-      if (isprint(tmp[i])) {
-        fprintf(f, "%c", tmp[i]);
-      } else {
-        fprintf(f, ".");
-      }
-    }
-
-    for (; i < llen; i++) fprintf(f, " ");
-
-    for (i = 0; i < line; i++) fprintf(f, " %02x", tmp[i]);
-
-    fprintf(f, "\n");
-  }
-  fprintf(f, "\n");
-}
-
-static int do_ber_dump(FILE *f, const uint8_t *ptr, size_t len,
-                       unsigned int depth) {
-  const uint8_t *end = ptr + len;
-
-  while (ptr < end) {
-    struct gber_tag tag;
-    ptr = ber_decode_tag(&tag, ptr, end - ptr);
-    if (NULL == ptr) return 0;
-
-    fprintf(f, "%*c.tag = %x\n", depth, ' ', tag.ber_tag);
-    fprintf(f, "%*c.class = %s\n", depth, ' ',
-            ber_id_octet_clsname(tag.ber_id));
-    fprintf(f, "%*c.constructed = %s\n", depth, ' ',
-            ber_id_octet_constructed(tag.ber_id) ? "yes" : "no");
-
-    fprintf(f, "%*c.len = %zu (0x%.2zx)\n", depth, ' ', tag.ber_len,
-            tag.ber_len);
-
-    if (ber_id_octet_constructed(tag.ber_id)) {
-      if (!do_ber_dump(f, ptr, tag.ber_len, depth + 1)) return 0;
-    } else {
-      hex_dumpf_r(f, ptr, tag.ber_len, 16, depth + 1);
-    }
-
-    ptr += tag.ber_len;
-  }
-
-  return 1;
-}
-
-int ber_dumpf(FILE *f, const uint8_t *ptr, size_t len) {
-  return do_ber_dump(f, ptr, len, 1);
-}
-
-int ber_dump(const uint8_t *ptr, size_t len) {
-  return ber_dumpf(stdout, ptr, len);
-}
-
-NS_INTERNAL const char *ber_id_octet_clsname(uint8_t id) {
-  static const char *clsname[] = {
-      "universal", "application", "context-specific", "private",
-  };
-  return clsname[(id & 0xc0) >> 6];
-}
-#endif
-
-#if 0
-NS_INTERNAL unsigned int ber_id_octet_class(uint8_t id)
-{
-  return (id & 0xc0) >> 6;
-}
-#endif
 
 NS_INTERNAL unsigned int ber_id_octet_constructed(uint8_t id) {
   return (id & 0x20) >> 5;
@@ -1535,7 +1408,7 @@ NS_INTERNAL void bi_terminate(BI_CTX *ctx) {
   bi_free(ctx, ctx->bi_radix);
 
   if (ctx->active_count != 0) {
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
     printf("bi_terminate: there were %d un-freed bigints\n", ctx->active_count);
 #endif
     abort();
@@ -1584,7 +1457,7 @@ NS_INTERNAL bigint *bi_copy(bigint *bi) {
 NS_INTERNAL void bi_permanent(bigint *bi) {
   check(bi);
   if (bi->refs != 1) {
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
     printf("bi_permanent: refs was not 1\n");
 #endif
     abort();
@@ -1600,7 +1473,7 @@ NS_INTERNAL void bi_permanent(bigint *bi) {
 NS_INTERNAL void bi_depermanent(bigint *bi) {
   check(bi);
   if (bi->refs != PERMANENT) {
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
     printf("bi_depermanent: bigint was not permanent\n");
 #endif
     abort();
@@ -1631,7 +1504,7 @@ NS_INTERNAL void bi_free(BI_CTX *ctx, bigint *bi) {
   ctx->free_count++;
 
   if (--ctx->active_count < 0) {
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
     printf(
         "bi_free: active_count went negative "
         "- double-freed bigint?\n");
@@ -2005,7 +1878,7 @@ NS_INTERNAL bigint *bi_import(BI_CTX *ctx, const uint8_t *data, int size) {
   return trim(biR);
 }
 
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
 /**
  * @brief The testharness uses this code to import text hex-streams and
  * convert them into bigints.
@@ -2415,7 +2288,7 @@ static bigint *alloc(BI_CTX *ctx, int size) {
     ctx->free_count--;
 
     if (biR->refs != 0) {
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
       printf("alloc: refs was not 0\n");
 #endif
       abort(); /* create a stack trace from a core dump */
@@ -2718,7 +2591,7 @@ NS_INTERNAL bigint *bi_mod_power(BI_CTX *ctx, bigint *bi, bigint *biexp) {
 #endif
 }
 
-#ifdef CONFIG_SSL_CERT_VERIFICATION
+#ifdef CONFIG_CSSL_CERT_VERIFICATION
 /**
  * @brief Perform a modular exponentiation using a temporary modulus.
  *
@@ -2810,8 +2683,8 @@ NS_INTERNAL bigint *bi_crt(BI_CTX *ctx, bigint *bi, bigint *dP, bigint *dQ,
 /* Amalgamated: #include "x509.h" */
 /* Amalgamated: #include "pem.h" */
 
-SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth) {
-  SSL_CTX *ctx;
+CSSL_CTX *CSSL_CTX_new(const CSSL_METHOD *meth) {
+  CSSL_CTX *ctx;
 
   ctx = calloc(1, sizeof(*ctx));
   if (NULL == ctx) goto out;
@@ -2832,7 +2705,7 @@ out:
   return ctx;
 }
 
-long SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long mode, void *ptr) {
+long CSSL_CTX_ctrl(CSSL_CTX *ctx, int cmd, long mode, void *ptr) {
   (void) ctx;
   (void) cmd;
   (void) ptr;
@@ -2842,123 +2715,6 @@ long SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long mode, void *ptr) {
   return ctx->mode;
 }
 
-int SSL_CTX_set_cipher_list(SSL_CTX *ctx, const char *str) {
-  /* TODO(rojer): Implement this. */
-  (void) ctx;
-  (void) str;
-  return 0;
-}
-
-void SSL_CTX_set_verify(SSL_CTX *ctx, int mode,
-                        int (*verify_callback)(int, X509_STORE_CTX *)) {
-  /* not implemented */
-  assert(verify_callback == NULL);
-  (void) verify_callback;
-
-  ctx->vrfy_mode = mode;
-}
-
-int SSL_CTX_kr_set_verify_name(SSL_CTX *ctx, const char *name) {
-  free(ctx->verify_name);
-  ctx->verify_name = strdup(name);
-  return ctx->verify_name != NULL;
-}
-
-#ifdef KR_NO_LOAD_CA_STORE
-static enum pem_filter_result pem_no_filter(const DER *obj, int type,
-                                            void *arg) {
-  (void) obj;
-  (void) type;
-  (void) arg;
-  return PEM_FILTER_NO;
-}
-#endif
-
-int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
-                                  const char *CAPath) {
-  unsigned int i;
-  int ret = 0;
-  X509 *ca;
-  PEM *p;
-
-  /* not implemented */
-  if (CAPath) {
-    dprintf(("%s: CAPath: Not implemented\n", __func__));
-  }
-  if (NULL == CAfile) {
-    /* XXX: SSL_error ?? */
-    return 0;
-  }
-
-#ifndef KR_NO_LOAD_CA_STORE
-  p = pem_load_types(CAfile, PEM_SIG_CERT);
-  if (NULL == p) goto out;
-
-  for (ca = NULL, i = 0; i < p->num_obj; i++) {
-    DER *d = &p->obj[i];
-    X509 *new;
-
-    new = X509_new(d->der, d->der_len);
-    if (NULL == new) goto out;
-
-    new->next = ca;
-    ca = new;
-  }
-
-  pem_free(p);
-  X509_free(ctx->ca_store);
-  ctx->ca_store = ca;
-  ret = 1;
-out:
-  return ret;
-#else /* KR_NO_LOAD_CA_STORE */
-  (void) ca;
-  (void) i;
-
-  /* Do a dry-run through cert store. We'll get an empty store back. */
-  p = pem_load(CAfile, pem_no_filter, NULL);
-  if (p != NULL) {
-    free(ctx->ca_file);
-    ctx->ca_file = strdup(CAfile);
-    pem_free(p);
-    ret = 1;
-  }
-  return ret;
-#endif
-}
-
-int SSL_CTX_use_certificate_chain_file(SSL_CTX *ctx, const char *file) {
-  int ret = 0;
-  PEM *p = NULL;
-
-  p = pem_load_types(file, PEM_SIG_CERT);
-  if (p == NULL) goto out;
-
-  pem_free(ctx->pem_cert);
-  ctx->pem_cert = p;
-  ret = 1;
-out:
-  return ret;
-}
-
-int SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type) {
-  int ret = 0;
-  PEM *p = NULL;
-
-  if (type != SSL_FILETYPE_PEM) {
-    /* XXX: SSL_error */
-    return 0;
-  }
-
-  p = pem_load_types(file, PEM_SIG_CERT);
-  if (p == NULL) goto out;
-
-  pem_free(ctx->pem_cert);
-  ctx->pem_cert = p;
-  ret = 1;
-out:
-  return ret;
-}
 
 static int decode_int(const uint8_t **pptr, const uint8_t *end,
                       struct ro_vec *result) {
@@ -2985,98 +2741,7 @@ static int decode_int(const uint8_t **pptr, const uint8_t *end,
   return 1;
 }
 
-/*
-RSAPrivateKey ::= SEQUENCE {
-  version           Version,
-  modulus           INTEGER,  -- n
-  publicExponent    INTEGER,  -- e
-  privateExponent   INTEGER,  -- d
-  prime1            INTEGER,  -- p
-  prime2            INTEGER,  -- q
-  exponent1         INTEGER,  -- d mod (p-1)
-  exponent2         INTEGER,  -- d mod (q-1)
-  coefficient       INTEGER,  -- (inverse of q) mod p
-  otherPrimeInfos   OtherPrimeInfos OPTIONAL
-}
-*/
-int SSL_CTX_use_PrivateKey_file(SSL_CTX *ctx, const char *file, int type) {
-  struct ro_vec vers, n, e, d, p, q, e1, e2, c;
-  const uint8_t *ptr, *end;
-  struct gber_tag tag;
-  RSA_CTX *rsa = NULL;
-  int ret = 0;
-  PEM *pem;
-
-  if (type != SSL_FILETYPE_PEM) {
-    return 0;
-  }
-
-  pem = pem_load_types(file, PEM_SIG_KEY | PEM_SIG_RSA_KEY);
-  if (NULL == pem) goto out;
-
-  ptr = pem->obj[0].der;
-  end = ptr + pem->obj[0].der_len;
-
-  if (pem->obj[0].der_type == PEM_SIG_KEY) {
-    const uint8_t *ai;
-    static const char *const oidAlgoRSA =
-        "\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01"; /* 1.2.840.113549.1.1.1 */
-
-    ptr = ber_decode_tag(&tag, ptr, end - ptr);
-    if (NULL == ptr || !ber_id_octet_constructed(tag.ber_id)) goto decode_err;
-
-    /* Version */
-    if (!decode_int(&ptr, end, &vers)) goto decode_err;
-
-    /* Verify that PrivateKeyInfo.algorithm is RSA */
-    ai = ber_decode_tag(&tag, ptr, end - ptr);
-    if (NULL == ai || !ber_id_octet_constructed(tag.ber_id)) goto decode_err;
-    ptr = ai + tag.ber_len;
-
-    ai = ber_decode_tag(&tag, ai, end - ai);
-    if (NULL == ai || tag.ber_tag != 6 /* OID */ || tag.ber_len != 9 ||
-        memcmp(ai, oidAlgoRSA, 9) != 0) {
-      goto decode_err;
-    }
-    ai += 9;
-
-    /* Ok, it's RSA. Unwrap the key and continue. */
-    ptr = ber_decode_tag(&tag, ptr, end - ptr);
-    if (NULL == ptr || tag.ber_tag != 4 /* octet string */) goto decode_err;
-  }
-
-  ptr = ber_decode_tag(&tag, ptr, end - ptr);
-  if (NULL == ptr || !ber_id_octet_constructed(tag.ber_id)) goto decode_err;
-
-  /* eat the version */
-  if (!decode_int(&ptr, end, &vers)) goto decode_err;
-  if (!decode_int(&ptr, end, &n)) goto decode_err;
-  if (!decode_int(&ptr, end, &e)) goto decode_err;
-  if (!decode_int(&ptr, end, &d)) goto decode_err;
-  if (!decode_int(&ptr, end, &p)) goto decode_err;
-  if (!decode_int(&ptr, end, &q)) goto decode_err;
-  if (!decode_int(&ptr, end, &e1)) goto decode_err;
-  if (!decode_int(&ptr, end, &e2)) goto decode_err;
-  if (!decode_int(&ptr, end, &c)) goto decode_err;
-
-  RSA_priv_key_new(&rsa, n.ptr, n.len, e.ptr, e.len, d.ptr, d.len, p.ptr, p.len,
-                   q.ptr, q.len, e1.ptr, e1.len, e2.ptr, e2.len, c.ptr, c.len);
-  if (NULL == rsa) goto out_free_pem;
-
-  RSA_free(ctx->rsa_privkey);
-  ctx->rsa_privkey = rsa;
-  ret = 1;
-  goto out_free_pem;
-
-decode_err:
-  dprintf(("%s: RSA private key decode error\n", file));
-out_free_pem:
-  pem_free(pem);
-out:
-  return ret;
-}
-
-void SSL_CTX_free(SSL_CTX *ctx) {
+void CSSL_CTX_free(CSSL_CTX *ctx) {
   if (ctx == NULL) return;
 #ifndef KR_NO_LOAD_CA_STORE
   X509_free(ctx->ca_store);
@@ -3100,45 +2765,6 @@ void SSL_CTX_free(SSL_CTX *ctx) {
 /* Amalgamated: #include "ktypes.h" */
 #include <ctype.h>
 
-#if KRYPTON_DEBUG
-void hex_dumpf(FILE *f, const void *buf, size_t len, size_t llen) {
-  const uint8_t *tmp = buf;
-  size_t i, j;
-  size_t line;
-
-  if (NULL == f || 0 == len) return;
-  if (!llen) llen = 0x10;
-
-  for (j = 0; j < len; j += line, tmp += line) {
-    if (j + llen > len) {
-      line = len - j;
-    } else {
-      line = llen;
-    }
-
-    fprintf(f, " | %05u : ", (unsigned int) j);
-
-    for (i = 0; i < line; i++) {
-      if (isprint(tmp[i])) {
-        fprintf(f, "%c", tmp[i]);
-      } else {
-        fprintf(f, ".");
-      }
-    }
-
-    for (; i < llen; i++) fprintf(f, " ");
-
-    for (i = 0; i < line; i++) fprintf(f, "%02x", tmp[i]);
-
-    fprintf(f, "\n");
-  }
-  fprintf(f, "\n");
-}
-
-void hex_dump(const void *ptr, size_t len, size_t llen) {
-  hex_dumpf(stdout, ptr, len, llen);
-}
-#endif
 #ifdef KR_MODULE_LINES
 #line 1 "src/src/md5.c"
 #endif
@@ -3646,7 +3272,7 @@ static void SHA1_Block(SHA_CTX *ctx, const void *block) {
   ctx->H[4] += E;
 }
 
-void SHA1_Init(SHA_CTX *ctx) {
+void CSHA1_Init(SHA_CTX *ctx) {
   ctx->size = 0;
 
   /* Initialize H with the magic constants (see FIPS180 for constants) */
@@ -3657,7 +3283,7 @@ void SHA1_Init(SHA_CTX *ctx) {
   ctx->H[4] = 0xc3d2e1f0;
 }
 
-void SHA1_Update(SHA_CTX *ctx, const void *data, unsigned long len) {
+void CSHA1_Update(SHA_CTX *ctx, const void *data, unsigned long len) {
   unsigned int lenW = ctx->size & 63;
 
   ctx->size += len;
@@ -3681,7 +3307,7 @@ void SHA1_Update(SHA_CTX *ctx, const void *data, unsigned long len) {
   if (len) memcpy(ctx->W, data, len);
 }
 
-void SHA1_Final(unsigned char hashout[20], SHA_CTX *ctx) {
+void CSHA1_Final(unsigned char hashout[20], SHA_CTX *ctx) {
   static const unsigned char pad[64] = {0x80};
   unsigned int padlen[2];
   int i;
@@ -3691,8 +3317,8 @@ void SHA1_Final(unsigned char hashout[20], SHA_CTX *ctx) {
   padlen[1] = htobe32((uint32_t)(ctx->size << 3));
 
   i = ctx->size & 63;
-  SHA1_Update(ctx, pad, 1 + (63 & (55 - i)));
-  SHA1_Update(ctx, padlen, 8);
+  CSHA1_Update(ctx, pad, 1 + (63 & (55 - i)));
+  CSHA1_Update(ctx, padlen, 8);
 
   /* Output hash */
   for (i = 0; i < 5; i++) put_be32(hashout + i * 4, ctx->H[i]);
@@ -3702,11 +3328,11 @@ static void kr_hash_sha1_v(size_t num_msgs, const uint8_t *msgs[],
                            const size_t *msg_lens, uint8_t *digest) {
   size_t i;
   SHA_CTX sha1;
-  SHA1_Init(&sha1);
+  CSHA1_Init(&sha1);
   for (i = 0; i < num_msgs; i++) {
-    SHA1_Update(&sha1, msgs[i], msg_lens[i]);
+    CSHA1_Update(&sha1, msgs[i], msg_lens[i]);
   }
-  SHA1_Final(digest, &sha1);
+  CSHA1_Final(digest, &sha1);
 }
 #endif /* !KR_EXT_SHA1 */
 #ifdef KR_MODULE_LINES
@@ -4434,26 +4060,11 @@ NS_INTERNAL void kr_ssl_hmac(SSL *ssl, int cs, size_t num_msgs,
 /* Amalgamated: #include "../openssl/ssl.h" */
 /* Amalgamated: #include "ktypes.h" */
 
-const SSL_METHOD meth = {0, 0};
-const SSL_METHOD sv_meth = {0, 1};
-const SSL_METHOD cl_meth = {1, 0};
+const CSSL_METHOD meth = {0, 0};
+const CSSL_METHOD sv_meth = {0, 1};
+const CSSL_METHOD cl_meth = {1, 0};
 
-const SSL_METHOD *TLSv1_2_method(void) {
-  return &meth;
-}
-const SSL_METHOD *TLSv1_2_server_method(void) {
-  return &sv_meth;
-}
-const SSL_METHOD *TLSv1_2_client_method(void) {
-  return &cl_meth;
-}
-const SSL_METHOD *SSLv23_method(void) {
-  return &meth;
-}
-const SSL_METHOD *SSLv23_server_method(void) {
-  return &sv_meth;
-}
-const SSL_METHOD *SSLv23_client_method(void) {
+const CSSL_METHOD *CSSLv23_client_method(void) {
   return &cl_meth;
 }
 #ifdef KR_MODULE_LINES
@@ -5401,7 +5012,7 @@ NS_INTERNAL void kr_cbc_decrypt(const kr_cipher_info *ci, void *cctx,
  * perform its calculations.
  */
 
-#define CONFIG_SSL_CERT_VERIFICATION 1
+#define CONFIG_CSSL_CERT_VERIFICATION 1
 
 /* Amalgamated: #include "ktypes.h" */
 
@@ -5523,7 +5134,7 @@ int RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data, uint8_t *out_data,
 
   /* decrypt */
   dat_bi = bi_import(ctx->bi_ctx, in_data, byte_size);
-#ifdef CONFIG_SSL_CERT_VERIFICATION
+#ifdef CONFIG_CSSL_CERT_VERIFICATION
   decrypted_bi = is_decryption ? /* decrypt or verify? */
                      RSA_private(ctx, dat_bi)
                                : RSA_public(ctx, dat_bi);
@@ -5537,7 +5148,7 @@ int RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data, uint8_t *out_data,
   if (block[i++] != 0) /* leading 0? */
     return -1;
 
-#ifdef CONFIG_SSL_CERT_VERIFICATION
+#ifdef CONFIG_CSSL_CERT_VERIFICATION
   if (is_decryption == 0) /* PKCS1.5 signing pads with "0xff"s */
   {
     if (block[i++] != 0x01) /* BT correct? */
@@ -5570,7 +5181,7 @@ bigint *RSA_private(const RSA_CTX *c, bigint *bi_msg) {
   return bi_crt(c->bi_ctx, bi_msg, c->dP, c->dQ, c->p, c->q, c->qInv);
 }
 
-#ifdef CONFIG_SSL_FULL_MODE
+#ifdef CONFIG_CSSL_FULL_MODE
 /**
  * Used for diagnostics.
  */
@@ -5641,11 +5252,11 @@ int RSA_encrypt(const RSA_CTX *ctx, const uint8_t *in_data, uint16_t in_len,
 #define MSG_NOSIGNAL 0
 #endif
 
-int SSL_library_init(void) {
+int CSSL_library_init(void) {
   return 1;
 }
 
-SSL *SSL_new(SSL_CTX *ctx) {
+SSL *CSSL_new(CSSL_CTX *ctx) {
   SSL *ssl;
 
   ssl = calloc(1, sizeof(*ssl));
@@ -5668,21 +5279,10 @@ out:
   return ssl;
 }
 
-int SSL_set_fd(SSL *ssl, int fd) {
+int CSSL_set_fd(SSL *ssl, int fd) {
   ssl->fd = fd;
-  ssl_err(ssl, SSL_ERROR_NONE);
+  ssl_err(ssl, CSSL_ERROR_NONE);
   return 1;
-}
-
-int SSL_get_fd(SSL *ssl) {
-  return ssl->fd;
-}
-
-int SSL_set_cipher_list(SSL *ssl, const char *str) {
-  /* TODO(rojer): Implement this. */
-  (void) str;
-  ssl_err(ssl, SSL_ERROR_SSL);
-  return 0;
 }
 
 static int do_send(SSL *ssl) {
@@ -5711,14 +5311,14 @@ again:
     if (SOCKET_ERRNO == EWOULDBLOCK) {
       goto shuffle;
     }
-    ssl_err(ssl, SSL_ERROR_SYSCALL);
+    ssl_err(ssl, CSSL_ERROR_SYSCALL);
     ssl->tx_len = 0;
     ssl->write_pending = 0;
     return 0;
   }
   if (ret == 0) {
     dprintf(("send: peer hung up\n"));
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     ssl->tx_len = 0;
     ssl->write_pending = 0;
     return 0;
@@ -5743,7 +5343,7 @@ again:
 shuffle:
   ssl->tx_len = len;
   memmove(ssl->tx_buf, buf, ssl->tx_len);
-  ssl_err(ssl, SSL_ERROR_WANT_WRITE);
+  ssl_err(ssl, CSSL_ERROR_WANT_WRITE);
   if (ssl->tx_len == 0) {
     /* Keep idle memory consumption low. */
     free(ssl->tx_buf);
@@ -5761,7 +5361,7 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
   if (NULL == ssl->rx_buf) {
     ssl->rx_buf = malloc(RX_INITIAL_BUF);
     if (NULL == ssl->rx_buf) {
-      ssl_err(ssl, SSL_ERROR_SYSCALL);
+      ssl_err(ssl, CSSL_ERROR_SYSCALL);
       return 0;
     }
 
@@ -5776,7 +5376,7 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
     new_len = ssl->rx_max_len + RX_INITIAL_BUF;
     new = realloc(ssl->rx_buf, new_len);
     if (NULL == new) {
-      ssl_err(ssl, SSL_ERROR_SYSCALL);
+      ssl_err(ssl, CSSL_ERROR_SYSCALL);
       return 0;
     }
 
@@ -5796,16 +5396,16 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
            errno));
   if (ret < 0) {
     if (SOCKET_ERRNO == EWOULDBLOCK) {
-      ssl_err(ssl, SSL_ERROR_WANT_READ);
+      ssl_err(ssl, CSSL_ERROR_WANT_READ);
       return 0;
     }
     dprintf(("recv: %s\n", strerror(errno)));
-    ssl_err(ssl, SSL_ERROR_SYSCALL);
+    ssl_err(ssl, CSSL_ERROR_SYSCALL);
     return 0;
   }
 
   if (ret == 0) {
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     dprintf(("peer hung up\n"));
     return 0;
   }
@@ -5813,7 +5413,7 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
   ssl->rx_len += ret;
 
   if (!tls_handle_recv(ssl, out, out_len)) {
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return 0;
   }
 
@@ -5822,7 +5422,7 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
 
 #if KRYPTON_DEBUG_NONBLOCKING
   if (ssl->rx_len) {
-    ssl_err(ssl, SSL_ERROR_WANT_READ);
+    ssl_err(ssl, CSSL_ERROR_WANT_READ);
     return 0;
   }
 #endif
@@ -5830,19 +5430,19 @@ static int do_recv(SSL *ssl, uint8_t *out, size_t out_len) {
   return 1;
 }
 
-int SSL_accept(SSL *ssl) {
+int CSSL_accept(SSL *ssl) {
   if (ssl->fatal) {
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return -1;
   }
   if (ssl->close_notify || ssl->state == STATE_CLOSING) {
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     return 0;
   }
 
   if (ssl->mode_defined && !ssl->is_server) {
     dprintf(("bad mode in accept\n"));
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return 0;
   }
 
@@ -5895,25 +5495,25 @@ int SSL_accept(SSL *ssl) {
       break;
   }
 
-  ssl_err(ssl, SSL_ERROR_NONE);
+  ssl_err(ssl, CSSL_ERROR_NONE);
   return 1;
 }
 
-int SSL_connect(SSL *ssl) {
+int CSSL_connect(SSL *ssl) {
   tls_sec_t sec;
 
   if (ssl->fatal) {
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return -1;
   }
   if (ssl->close_notify || ssl->state == STATE_CLOSING) {
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     return 0;
   }
 
   if (ssl->mode_defined && ssl->is_server) {
     dprintf(("bad mode in connect\n"));
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return 0;
   }
 
@@ -5928,14 +5528,14 @@ int SSL_connect(SSL *ssl) {
 
       sec = tls_new_security();
       if (NULL == sec) {
-        ssl_err(ssl, SSL_ERROR_SYSCALL);
+        ssl_err(ssl, CSSL_ERROR_SYSCALL);
         return -1;
       }
       ssl->nxt = sec;
 
       if (!tls_cl_hello(ssl)) {
         dprintf(("failed to construct hello\n"));
-        ssl_err(ssl, SSL_ERROR_SYSCALL);
+        ssl_err(ssl, CSSL_ERROR_SYSCALL);
         return -1;
       }
 
@@ -5966,13 +5566,13 @@ int SSL_connect(SSL *ssl) {
         }
         if (!tls_send_certs(ssl, cert)) {
           dprintf(("failed to send client certs\n"));
-          ssl_err(ssl, SSL_ERROR_SYSCALL);
+          ssl_err(ssl, CSSL_ERROR_SYSCALL);
           return -1;
         }
       }
       if (!tls_cl_finish(ssl)) {
         dprintf(("failed to construct key exchange\n"));
-        ssl_err(ssl, SSL_ERROR_SYSCALL);
+        ssl_err(ssl, CSSL_ERROR_SYSCALL);
         return -1;
       }
 
@@ -5991,13 +5591,13 @@ int SSL_connect(SSL *ssl) {
       break;
   }
 
-  ssl_err(ssl, SSL_ERROR_NONE);
+  ssl_err(ssl, CSSL_ERROR_NONE);
   return 1;
 }
 
-int SSL_read(SSL *ssl, void *buf, int num) {
+int CSSL_read(SSL *ssl, void *buf, int num) {
   if (ssl->fatal) {
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return -1;
   }
 
@@ -6025,7 +5625,7 @@ int SSL_read(SSL *ssl, void *buf, int num) {
   }
 
   if (ssl->close_notify || ssl->state == STATE_CLOSING) {
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     return 0;
   }
 
@@ -6035,7 +5635,7 @@ int SSL_read(SSL *ssl, void *buf, int num) {
   if (ssl->rx_len > 0) {
     /* Try decoding what is in the buffer already. */
     if (!tls_handle_recv(ssl, buf, num)) {
-      ssl_err(ssl, SSL_ERROR_SSL);
+      ssl_err(ssl, CSSL_ERROR_SSL);
       return 0;
     }
   }
@@ -6044,44 +5644,44 @@ int SSL_read(SSL *ssl, void *buf, int num) {
     if (ssl->state != STATE_ESTABLISHED) {
       int ret;
       if (ssl->is_server) {
-        ret = SSL_accept(ssl);
+        ret = CSSL_accept(ssl);
       } else {
-        ret = SSL_connect(ssl);
+        ret = CSSL_connect(ssl);
       }
       if (ret <= 0) return ret;
     }
 
     if (!do_recv(ssl, buf, num)) {
-      return ssl->err == SSL_ERROR_ZERO_RETURN ? 0 : -1;
+      return ssl->err == CSSL_ERROR_ZERO_RETURN ? 0 : -1;
     }
   }
 
-  ssl_err(ssl, SSL_ERROR_NONE);
+  ssl_err(ssl, CSSL_ERROR_NONE);
   return ssl->copied;
 }
 
-int SSL_write(SSL *ssl, const void *buf, int num) {
+int CSSL_write(SSL *ssl, const void *buf, int num) {
   int res = num;
   if (num == 0 && ssl->tx_len > 0) {
     if (!do_send(ssl)) return -1;
-    ssl_err(ssl, ssl->fatal ? SSL_ERROR_SSL : SSL_ERROR_NONE);
+    ssl_err(ssl, ssl->fatal ? CSSL_ERROR_SSL : CSSL_ERROR_NONE);
     return 0;
   }
   if (ssl->fatal) {
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return -1;
   }
   if (ssl->close_notify || ssl->state == STATE_CLOSING) {
-    ssl_err(ssl, SSL_ERROR_ZERO_RETURN);
+    ssl_err(ssl, CSSL_ERROR_ZERO_RETURN);
     return 0;
   }
 
   if (ssl->state != STATE_ESTABLISHED) {
     int ret;
     if (ssl->is_server) {
-      ret = SSL_accept(ssl);
+      ret = CSSL_accept(ssl);
     } else {
-      ret = SSL_connect(ssl);
+      ret = CSSL_connect(ssl);
     }
     if (ret <= 0) return ret;
   }
@@ -6100,16 +5700,16 @@ int SSL_write(SSL *ssl, const void *buf, int num) {
   }
   if (!do_send(ssl)) return -1;
 
-  ssl_err(ssl, SSL_ERROR_NONE);
+  ssl_err(ssl, CSSL_ERROR_NONE);
   return res;
 }
 
-int SSL_get_error(const SSL *ssl, int ret) {
+int CSSL_get_error(const SSL *ssl, int ret) {
   (void) ret;
   return ssl->err;
 }
 
-int SSL_shutdown(SSL *ssl) {
+int CSSL_shutdown(SSL *ssl) {
   if (ssl->fatal) {
     return 0;
   }
@@ -6137,7 +5737,7 @@ int SSL_shutdown(SSL *ssl) {
   return 1;
 }
 
-void SSL_free(SSL *ssl) {
+void CSSL_free(SSL *ssl) {
   if (ssl) {
     tls_free_security(ssl->cur);
     tls_free_security(ssl->nxt);
@@ -6149,21 +5749,21 @@ void SSL_free(SSL *ssl) {
 
 void ssl_err(SSL *ssl, int err) {
   switch (err) {
-    case SSL_ERROR_NONE:
+    case CSSL_ERROR_NONE:
       break;
-    case SSL_ERROR_SSL:
+    case CSSL_ERROR_SSL:
       break;
-    case SSL_ERROR_WANT_READ:
+    case CSSL_ERROR_WANT_READ:
       break;
-    case SSL_ERROR_WANT_WRITE:
+    case CSSL_ERROR_WANT_WRITE:
       break;
-    case SSL_ERROR_SYSCALL:
+    case CSSL_ERROR_SYSCALL:
       break;
-    case SSL_ERROR_ZERO_RETURN:
+    case CSSL_ERROR_ZERO_RETURN:
       break;
-    case SSL_ERROR_WANT_CONNECT:
+    case CSSL_ERROR_WANT_CONNECT:
       break;
-    case SSL_ERROR_WANT_ACCEPT:
+    case CSSL_ERROR_WANT_ACCEPT:
       break;
     default:
       abort();
@@ -6327,7 +5927,7 @@ NS_INTERNAL int tls_tx_push(SSL *ssl, const void *data, size_t len) {
     new = realloc(ssl->tx_buf, new_len);
     if (NULL == new) {
       /* or block? */
-      ssl_err(ssl, SSL_ERROR_SYSCALL);
+      ssl_err(ssl, CSSL_ERROR_SYSCALL);
       return 0;
     }
 
@@ -6560,7 +6160,7 @@ NS_INTERNAL int tls_cl_hello(SSL *ssl) {
   hello.version = htobe16(0x0303);
   hello.random.time = htobe32(time(NULL));
   if (!kr_get_random(hello.random.opaque, sizeof(hello.random.opaque))) {
-    ssl_err(ssl, SSL_ERROR_SYSCALL);
+    ssl_err(ssl, CSSL_ERROR_SYSCALL);
     return 0;
   }
   hello.sess_id_len = 0;
@@ -6612,7 +6212,7 @@ NS_INTERNAL int tls_cl_finish(SSL *ssl) {
 
   in.version = htobe16(0x0303);
   if (!kr_get_random(in.opaque, sizeof(in.opaque))) {
-    ssl_err(ssl, SSL_ERROR_SYSCALL);
+    ssl_err(ssl, CSSL_ERROR_SYSCALL);
     return 0;
   }
   tls_compute_master_secret(ssl->nxt, &in);
@@ -6622,7 +6222,7 @@ NS_INTERNAL int tls_cl_finish(SSL *ssl) {
   if (RSA_encrypt(ssl->nxt->svr_key, (uint8_t *) &in, sizeof(in), buf + 6, 0) <=
       1) {
     dprintf(("RSA encrypt failed\n"));
-    ssl_err(ssl, SSL_ERROR_SSL);
+    ssl_err(ssl, CSSL_ERROR_SSL);
     return 0;
   }
 
@@ -6665,7 +6265,7 @@ NS_INTERNAL int tls_cl_finish(SSL *ssl) {
                     1 /* is_signing */) !=
         RSA_block_size(ssl->ctx->rsa_privkey)) {
       dprintf(("RSA sign failed\n"));
-      ssl_err(ssl, SSL_ERROR_SSL);
+      ssl_err(ssl, CSSL_ERROR_SSL);
       return 0;
     }
     p += RSA_block_size(ssl->ctx->rsa_privkey);
@@ -6776,7 +6376,7 @@ static int handle_hello(SSL *ssl, const struct tls_hdr *hdr, const uint8_t *buf,
   buf += 2;
 
   if (proto != TLS_1_2_PROTO && proto != TLS_1_1_PROTO &&
-      proto != TLS_1_0_PROTO && proto != SSL_3_0_PROTO) {
+      proto != TLS_1_0_PROTO && proto != CSSL_3_0_PROTO) {
     dprintf(("bad proto version: %04x\n", proto));
     goto bad_vers;
   }
@@ -7456,18 +7056,13 @@ int tls_handle_recv(SSL *ssl, uint8_t *out, size_t out_len) {
     if (hdr->vers != htobe16(TLS_1_2_PROTO) &&
         hdr->vers != htobe16(TLS_1_1_PROTO) &&
         hdr->vers != htobe16(TLS_1_0_PROTO) &&
-        hdr->vers != htobe16(SSL_3_0_PROTO)) {
+        hdr->vers != htobe16(CSSL_3_0_PROTO)) {
       dprintf(("bad framing version: 0x%.4x\n", be16toh(hdr->vers)));
       ssl->rx_len = 0;
       return 0;
     }
 
     msg_end = msg + be16toh(hdr->len);
-
-#if KRYPTON_DEBUG
-    dprintf(("msg %d len %d, have %d\n", (int) hdr->type,
-             (int) be16toh(hdr->len), (int) (end - msg)));
-#endif
 
     if (msg_end > end) {
       /* incomplete data */
@@ -8240,7 +7835,7 @@ again:
  * This will matter in practice, for example if the root CA cert expires...
 */
 #ifndef KR_NO_LOAD_CA_STORE
-static X509 *find_anchor(SSL_CTX *ctx, X509 *chain) {
+static X509 *find_anchor(CSSL_CTX *ctx, X509 *chain) {
   X509 *cur;
 
   for (cur = ctx->ca_store; cur; cur = cur->next) {
@@ -8269,7 +7864,7 @@ static enum pem_filter_result pem_issuer_filter(const DER *obj, int type,
   return res;
 }
 
-static X509 *find_anchor(SSL_CTX *ctx, X509 *chain) {
+static X509 *find_anchor(CSSL_CTX *ctx, X509 *chain) {
   PEM *p = pem_load(ctx->ca_file, pem_issuer_filter, &chain->issuer);
   if (p != NULL && p->num_obj == 1) {
     X509 *new = X509_new(p->obj->der, p->obj->der_len);
@@ -8284,7 +7879,7 @@ static X509 *find_anchor(SSL_CTX *ctx, X509 *chain) {
 }
 #endif
 
-int X509_verify(SSL_CTX *ctx, X509 *chain) {
+int X509_verify(CSSL_CTX *ctx, X509 *chain) {
   int res;
   X509 *anchor;
 

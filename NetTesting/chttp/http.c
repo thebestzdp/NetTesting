@@ -41,8 +41,8 @@
 
 #ifdef USEOPENSSL
 
-#include <openssl/ssl.h>
-#include <openssl/err.h>
+//#include <openssl/ssl.h>
+//#include <openssl/err.h>
 
 #else
 #include "krypton.h"
@@ -109,7 +109,7 @@ struct ft_http_client_t
     unsigned short cur_value_size;
 
 #if FT_SUPPORT_HTTPS
-    SSL_CTX *ctx;
+    CSSL_CTX *ctx;
     SSL *ssl;
 #endif
 
@@ -162,13 +162,13 @@ static void http_ssl_free(ft_http_client_t* http)
 {
     if(http->ssl != NULL)
     {
-        SSL_shutdown(http->ssl);
-        SSL_free(http->ssl);
+        CSSL_shutdown(http->ssl);
+        CSSL_free(http->ssl);
         http->ssl = NULL;
     }
     if(http->ctx != NULL)
     {
-        SSL_CTX_free(http->ctx);
+        CSSL_CTX_free(http->ctx);
         http->ctx = NULL;
     }
 }
@@ -180,13 +180,13 @@ HTTP_API int ft_http_init()
 #if FT_SUPPORT_HTTPS
 
 #ifdef USEOPENSSL
-    OpenSSL_add_all_algorithms();
+    OpenCSSL_add_all_algorithms();
     ERR_load_BIO_strings();
     ERR_load_crypto_strings();
-    SSL_load_error_strings();
+    CSSL_load_error_strings();
 #endif
 
-    if(SSL_library_init() < 0)
+    if(CSSL_library_init() < 0)
     {
         return -1;
     }
@@ -346,7 +346,10 @@ static int socket_select(ft_http_client_t* http, int mode, int timeout)
     struct timeval tv, start, elapsed;
 
     gettimeofday(&start, 0);
-
+   // __FD_ISSET_chk
+    if(http->fd+1 >=FD_SETSIZE){
+        return -1;
+    }
     while(remaind > 0)
     {
          if(mode & kSelectRead)    { FD_ZERO(&rfd); FD_SET(http->fd, &rfd); }
@@ -487,7 +490,6 @@ static int on_status_cb(http_parser* parser, const char *at, size_t length)
 {
     ft_http_client_t* http = (ft_http_client_t*)parser->data;
     http->status_code = parser->status_code;
-    printf("-- status: %d\n", http->status_code);
     return 0;
 }
 
@@ -584,17 +586,17 @@ static int http_check_error(ft_http_client_t* http, int mode, int ret)
 #if FT_SUPPORT_HTTPS
     if(http->proto_type == PROTO_HTTPS)
     {
-        int error =  SSL_get_error(http->ssl, ret);
-        if(SSL_ERROR_ZERO_RETURN == error)
+        int error =  CSSL_get_error(http->ssl, ret);
+        if(CSSL_ERROR_ZERO_RETURN == error)
         {
             return -1;
         }
-        else if(error == SSL_ERROR_WANT_WRITE ||
-            error == SSL_ERROR_WANT_READ)
+        else if(error == CSSL_ERROR_WANT_WRITE ||
+            error == CSSL_ERROR_WANT_READ)
         {
             return 0;
         }
-        else if(SSL_ERROR_SYSCALL == error)
+        else if(CSSL_ERROR_SYSCALL == error)
         {
             goto check_select;
         }
@@ -634,7 +636,7 @@ static int http_read_write(ft_http_client_t* http, const char* data, int len, in
         if(http->proto_type == PROTO_HTTPS)
         {
 #if FT_SUPPORT_HTTPS
-            r = read ? SSL_read(http->ssl, (char*)data + n, len - n) : SSL_write(http->ssl, data + n, len - n);
+            r = read ? CSSL_read(http->ssl, (char*)data + n, len - n) : CSSL_write(http->ssl, data + n, len - n);
 #endif
         }
         else
@@ -671,17 +673,17 @@ static int http_ssl_connect(ft_http_client_t* http)
     int remaind = http->timeout;
     struct timeval start, elapsed;
 
-    http->ctx = SSL_CTX_new(SSLv23_client_method());
+    http->ctx = CSSL_CTX_new(CSSLv23_client_method());
     if(http->ctx == NULL)
     {
         return -1;
     }
-    http->ssl = SSL_new(http->ctx);
+    http->ssl = CSSL_new(http->ctx);
     if(http->ssl == NULL)
     {
         return -1;
     }
-    if(SSL_set_fd(http->ssl, http->fd) == 0)
+    if(CSSL_set_fd(http->ssl, http->fd) == 0)
     {
         return -1;
     }
@@ -690,7 +692,7 @@ static int http_ssl_connect(ft_http_client_t* http)
 
     do
     {
-        ssl_ret = SSL_connect(http->ssl);
+        ssl_ret = CSSL_connect(http->ssl);
 
         gettimeofday(&elapsed, 0);
         remaind = http->timeout - ((int)(elapsed.tv_sec - start.tv_sec) * 1000 + (int)(elapsed.tv_usec - start.tv_usec) / 1000);
@@ -846,6 +848,16 @@ static int http_connect_host(ft_http_client_t* http, const char* url, struct htt
     }
 #endif
 
+    return ERR_OK;
+}
+
+int ft_get_host(const char * url, char *host) {
+    struct http_parser_url u;
+    if( http_parser_parse_url(url, strlen(url), 0, &u) != 0 )
+    {
+        return ERR_URL_INVALID;
+    }
+    memcpy(host, url + u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
     return ERR_OK;
 }
 
@@ -1050,43 +1062,6 @@ HTTP_API const char* ft_http_sync_request(ft_http_client_t* http, const char* ur
     return http->body;
 }
 
-
-HTTP_API const char* ft_http_sync_post_file(ft_http_client_t* http, const char* url, const char* filepath)
-{
-    static const char* boundary = "-------------------------87142694621188";
-
-    return NULL;
-}
-
-HTTP_API int ft_http_sync_download_file(ft_http_client_t* http, const char* url, const char* filepath)
-{
-    if(http == NULL)
-    {
-        return -1;
-    }
-
-    http->method = M_GET;
-    http->download = 1;
-    
-    free_member(http->filename);
-    if(filepath != NULL)
-    {
-        http->filename = _strdup(filepath);
-
-        if(http->filename == NULL)
-        {
-            return http->error_code = ERR_OUT_MEMORY;
-        }
-    }
-
-    if(http_internal_sync_request(http, url, 0, 0, 0, 0) == ERR_OK)
-    {
-        return ERR_OK;
-    }
-
-    return http->error_code;
-}
-
 HTTP_API int ft_http_cancel_request(ft_http_client_t* http)
 {
     if(http && http->fd != HTTP_INVALID_SOCKET)
@@ -1106,16 +1081,6 @@ HTTP_API int ft_http_exit(ft_http_client_t* http)
 {
     if(http) http->exit = 1;
 
-    return 0;
-}
-
-HTTP_API int ft_http_set_data_recv_cb(ft_http_client_t* http, data_recv_cb_t cb, void* user)
-{
-    if(http)
-    {
-        http->user = user;
-        http->recv_cb = cb;
-    }
     return 0;
 }
 

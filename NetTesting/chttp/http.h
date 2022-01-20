@@ -60,13 +60,11 @@ typedef struct ft_http_client_t ft_http_client_t;
 
 typedef int (*data_recv_cb_t)( ft_http_client_t* http, const char* data, int size, int total, void* user);
 
+HTTP_API int ft_http_init(void);
 
-HTTP_API int ft_http_init();
+HTTP_API void ft_http_deinit(void);
 
-HTTP_API void ft_http_deinit();
-
-
-HTTP_API ft_http_client_t* ft_http_new();
+HTTP_API ft_http_client_t* ft_http_new(void);
 
 HTTP_API void ft_http_destroy(ft_http_client_t* http);
 
@@ -78,17 +76,13 @@ HTTP_API int ft_http_set_timeout(ft_http_client_t* http, int timeout);
 
 HTTP_API const char* ft_http_sync_request(ft_http_client_t* http, const char* url, http_request_method_e m_);
 
-HTTP_API int ft_http_sync_download_file( ft_http_client_t* http, const char* url, const char* filepath);
-
 HTTP_API int ft_http_cancel_request(ft_http_client_t* http);
 
 HTTP_API int ft_http_wait_done(ft_http_client_t* http);
 
-HTTP_API int ft_http_set_data_recv_cb(ft_http_client_t* http, data_recv_cb_t cb, void* user);
-
 HTTP_API int ft_http_exit(ft_http_client_t* http);
 
-HTTP_API const char* ft_http_sync_post_file(ft_http_client_t* http, const char* url, const char* filepath);
+HTTP_API int ft_get_host(const char * url, char *host);
 
 #ifdef __cplusplus
 }
